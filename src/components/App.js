@@ -45,13 +45,15 @@ function App() {
   const location = useLocation();
 
   React.useEffect(() => {
-    Promise.all([api.getCurrentUser(), api.getCards()])
-      .then(([userData, cardsData]) => {
-        setCurrentUser(userData);
-        setCards(cardsData);
-        handleToken();
-      })
-      .catch(err => console.log(`Error: ${err.status}`))
+    handleToken();
+    if (isLoggedIn) {
+      Promise.all([api.getCurrentUser(), api.getCards()])
+        .then(([userData, cardsData]) => {
+          setCurrentUser(userData);
+          setCards(cardsData);
+        })
+        .catch(err => console.log(`Error: ${err.status}`))
+    }
   }, [isLoggedIn])
 
   React.useEffect(() => {
@@ -113,10 +115,6 @@ function App() {
 
   function handleUserInfoButtonClick() {
     setisUserInfoActive(!isUserInfoActive);
-  }
-
-  function handleLoginClick() {
-    setIsLoggedIn(true);
   }
 
   function closeAllPopups() {
@@ -201,11 +199,11 @@ function App() {
   function handleLogonSubmit(data) {
     setIsLoading(true);
     const { email, password } = data;
-    setUserEmail(email);
     mestoAuth.login(email, password)
       .then(data => {
         if (data.token) {
-          handleLoginClick();
+          setUserEmail(email);
+          setIsLoggedIn(true);
           navigate('/', { replace: true });
         }
       })
@@ -226,13 +224,14 @@ function App() {
           navigate('/', { replace: true });
           setUserEmail(res.data.email);
         })
-        .catch(err=> console.log(`Error: ${err.status}`))
+        .catch(err => console.log(`Error: ${err.status}`))
     }
   }
 
   function handleSignOut() {
     localStorage.removeItem('jwt');
     navigate('/react-mesto-auth/sign-in');
+    setIsLoggedIn(false);
     setUserEmail('');
   }
 
